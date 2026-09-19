@@ -11,11 +11,20 @@ type AppHeaderProps = {
     email: string;
     image?: string | null;
   };
+  googleCalendar?: {
+    linked: boolean;
+    enabled: boolean;
+  };
   title?: string;
   description?: string;
 };
 
-export function AppHeader({ user, title, description }: AppHeaderProps) {
+export function AppHeader({
+  user,
+  googleCalendar,
+  title,
+  description,
+}: AppHeaderProps) {
   return (
     <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4">
       <SidebarTrigger className="-ml-1" />
@@ -35,7 +44,7 @@ export function AppHeader({ user, title, description }: AppHeaderProps) {
       {!title && !description && <div className="flex-1" />}
       <div className="flex items-center gap-1">
         <ModeToggle />
-        <UserButton user={user} />
+        <UserButton user={user} googleCalendar={googleCalendar} />
       </div>
     </header>
   );

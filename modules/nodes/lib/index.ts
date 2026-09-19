@@ -46,6 +46,12 @@ export const NODE_TYPES: NodeType[] = [
     outputs: [{ id: "out", label: "Payload" }],
     config: [
       { key: "secret", label: "Secret header (optional)", type: "text", placeholder: "my-secret" },
+      {
+        key: "testJson",
+        label: "Test JSON",
+        type: "textarea",
+        placeholder: '{"message": "hello"}',
+      },
     ],
     sampleFields: ["body", "headers", "query"],
   },
@@ -57,7 +63,14 @@ export const NODE_TYPES: NodeType[] = [
     isTrigger: true,
     inputs: [],
     outputs: [{ id: "out", label: "Message" }],
-    config: [],
+    config: [
+      {
+        key: "testJson",
+        label: "Test JSON",
+        type: "textarea",
+        placeholder: '{"message": "hello", "chatId": "123", "from": "student"}',
+      },
+    ],
     sampleFields: ["message", "chatId", "from", "text"],
   },
   {
@@ -68,8 +81,15 @@ export const NODE_TYPES: NodeType[] = [
     isTrigger: true,
     inputs: [],
     outputs: [{ id: "out", label: "Event" }],
-    config: [],
-    sampleFields: ["action", "repository", "commits", "pull_request"],
+    config: [
+      {
+        key: "testJson",
+        label: "Test JSON",
+        type: "textarea",
+        placeholder: '{"action": "opened", "title": "Bug report"}',
+      },
+    ],
+    sampleFields: ["action", "event", "repository", "title", "body", "url", "sender"],
   },
   {
     type: "set-fields",
@@ -187,7 +207,7 @@ export const NODE_TYPES: NodeType[] = [
   {
     type: "google-calendar-event",
     label: "Google Calendar Event",
-    description: "Create an event on Google Calendar",
+    description: "Create an event on the connected Google Calendar",
     category: "action",
     inputs: [{ id: "in" }],
     outputs: [{ id: "out" }],

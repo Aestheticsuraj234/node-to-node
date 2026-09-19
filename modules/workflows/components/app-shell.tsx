@@ -10,6 +10,10 @@ type AppShellProps = {
     email: string;
     image?: string | null;
   };
+  googleCalendar?: {
+    linked: boolean;
+    enabled: boolean;
+  };
   title?: string;
   description?: string;
   children: React.ReactNode;
@@ -17,6 +21,7 @@ type AppShellProps = {
 
 export function AppShell({
   user,
+  googleCalendar,
   title,
   description,
   children,
@@ -25,7 +30,12 @@ export function AppShell({
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <AppHeader user={user} title={title} description={description} />
+        <AppHeader
+          user={user}
+          googleCalendar={googleCalendar}
+          title={title}
+          description={description}
+        />
         {children}
       </SidebarInset>
     </SidebarProvider>

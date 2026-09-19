@@ -12,7 +12,10 @@ export const auth = betterAuth({
     socialProviders:{
         google:{
             clientId: process.env.GOOGLE_CLIENT_ID!,
-            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+            accessType: "offline",
+            prompt: "select_account consent",
+            scope: ["https://www.googleapis.com/auth/calendar.events"],
         },
         github:{
             clientId: process.env.GITHUB_CLIENT_ID!,

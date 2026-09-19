@@ -138,6 +138,7 @@ function WorkflowBuilderInner({
         {selectedNode && (
           <aside className="flex h-full w-80 shrink-0 flex-col overflow-hidden border-l bg-background">
             <NodeConfigPanel
+              workflowId={workflowId}
               selectedNode={selectedNode}
               nodes={nodes}
               edges={edges}

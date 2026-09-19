@@ -21,12 +21,13 @@ export function compileWorkflow(
     nodes: WorkflowNode[],
     edges: WorkflowEdge[],
     executionId: string,
+    userId: string,
   ) {
     const graph = new StateGraph(WorkflowState);
   
     for (const node of nodes) {
       graph.addNode(node.id, async (state) =>
-        executeCanvasNode(state, node, executionId),
+        executeCanvasNode(state, node, executionId, userId),
       );
     }
   

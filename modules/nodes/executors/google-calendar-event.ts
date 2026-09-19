@@ -1,36 +1,23 @@
+import { getGoogleCalendarAccessToken } from "@/modules/auth/lib/google-calendar";
 import { interpolate } from "@/modules/engine/lib/template";
 
-async function getGoogleAccessToken() {
-  const res = await fetch("https://oauth2.googleapis.com/token", {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      client_id: process.env.GOOGLE_CLIENT_ID!,
-      client_secret: process.env.GOOGLE_CLIENT_SECRET!,
-      refresh_token: process.env.GOOGLE_REFRESH_TOKEN!,
-      grant_type: "refresh_token",
-    }),
-  });
-  const data = await res.json();
-  if (!data.access_token) {
-    const hint =
-      data.error === "unauthorized_client"
-        ? " — client ID/secret don't match the refresh token. Re-generate all 3 from the same OAuth client (see OAuth Playground steps)."
-        : "";
+type NodeRunContext = {
+  userId?: string;
+};
+
+/** Create a Google Calendar event using the workflow owner's Better Auth Google account */
+export async function runGoogleCalendarEvent(
+  config: any,
+  item: any,
+  ctx?: NodeRunContext,
+) {
+  if (!ctx?.userId) {
     throw new Error(
-      [data.error, data.error_description].filter(Boolean).join(": ") + hint,
+      "Google Calendar needs the workflow owner. Re-run the workflow after signing in.",
     );
   }
-  return data.access_token as string;
-}
 
-/** Create a Google Calendar event — refresh token in .env */
-export async function runGoogleCalendarEvent(config: any, item: any) {
-  if (!process.env.GOOGLE_REFRESH_TOKEN) {
-    throw new Error("GOOGLE_REFRESH_TOKEN missing in .env");
-  }
-
-  const accessToken = await getGoogleAccessToken();
+  const accessToken = await getGoogleCalendarAccessToken(ctx.userId);
   const title = interpolate(config.title ?? "", item);
   const start = interpolate(config.start ?? "", item);
   const end = interpolate(config.end ?? "", item);
@@ -52,7 +39,15 @@ export async function runGoogleCalendarEvent(config: any, item: any) {
   );
 
   const data = await res.json();
-  if (!res.ok) throw new Error(data.error?.message ?? "Calendar API error");
+  if (!res.ok) {
+    const message = data.error?.message ?? "Calendar API error";
+    if (res.status === 401 || res.status === 403) {
+      throw new Error(
+        `${message} Enable Google Calendar from your profile, and turn on the Calendar API in the same Google Cloud project as GOOGLE_CLIENT_ID.`,
+      );
+    }
+    throw new Error(message);
+  }
 
   return { ...item, id: data.id, htmlLink: data.htmlLink };
 }

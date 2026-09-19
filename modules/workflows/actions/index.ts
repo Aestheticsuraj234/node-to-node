@@ -7,6 +7,8 @@ import { requireAuth } from "@/modules/auth/actions";
 import { inngest } from "@/modules/inngest/client";
 import { workflowTriggered } from "@/modules/inngest/events";
 import { getWorkflowTemplate } from "@/modules/workflows/lib/templates";
+import { parseWorkflowGraph } from "@/modules/canvas/lib/parse-graph";
+import { ensureTelegramWebhook } from "@/modules/webhooks/lib/telegram";
 
 export async function getWorkflows() {
   const user = await requireAuth();
@@ -83,6 +85,32 @@ export async function toggleActive(id: string, active: boolean) {
 
   revalidatePath("/");
   revalidatePath(`/workflows/${id}`);
+
+  if (!active) return { ok: true as const };
+
+  const workflow = await prisma.workflow.findFirst({
+    where: { id, userId: user.id },
+    select: { nodes: true },
+  });
+  const { nodes } = parseWorkflowGraph(workflow?.nodes, []);
+  const listensToTelegram = nodes.some(
+    (node) => node.data.nodeType === "telegram-trigger",
+  );
+
+  if (!listensToTelegram) return { ok: true as const };
+
+  try {
+    await ensureTelegramWebhook();
+    return { ok: true as const };
+  } catch (err) {
+    return {
+      ok: true as const,
+      warning:
+        err instanceof Error
+          ? err.message
+          : "Telegram webhook could not be registered",
+    };
+  }
 }
 
 

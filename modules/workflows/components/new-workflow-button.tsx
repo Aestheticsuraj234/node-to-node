@@ -58,12 +58,12 @@ export function NewWorkflowButton({
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="max-h-[min(85vh,760px)] overflow-y-auto sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>New workflow</DialogTitle>
             <DialogDescription>
-              Start from a blank canvas or use the Manual Path template to
-              verify trigger → AI → transform → HTTP.
+              Start blank or copy a full graph from a template. Each template
+              includes sample JSON so Run works before you connect live webhooks.
             </DialogDescription>
           </DialogHeader>
           <WorkflowTemplatePicker

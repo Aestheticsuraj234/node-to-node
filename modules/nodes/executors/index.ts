@@ -10,7 +10,14 @@ import { runTelegramSend } from "@/modules/nodes/executors/telegram-send";
 import { runTelegramTrigger } from "@/modules/nodes/executors/telegram-trigger";
 import { runWebhookTrigger } from "@/modules/nodes/executors/webhook-trigger";
 
-const EXECUTORS: Record<string, (config: any, item: any) => Promise<any>> = {
+export type NodeRunContext = {
+  userId: string;
+};
+
+const EXECUTORS: Record<
+  string,
+  (config: any, item: any, ctx?: NodeRunContext) => Promise<any>
+> = {
   "manual-trigger": runManualTrigger,
   "webhook-trigger": runWebhookTrigger,
   "telegram-trigger": runTelegramTrigger,
@@ -24,8 +31,13 @@ const EXECUTORS: Record<string, (config: any, item: any) => Promise<any>> = {
   "google-calendar-event": runGoogleCalendarEvent,
 };
 
-export async function runNode(nodeType: string, config: any, item: any) {
+export async function runNode(
+  nodeType: string,
+  config: any,
+  item: any,
+  ctx?: NodeRunContext,
+) {
   const fn = EXECUTORS[nodeType];
   if (!fn) throw new Error(`No executor for node type: ${nodeType}`);
-  return fn(config, item);
+  return fn(config, item, ctx);
 }

@@ -4,19 +4,36 @@ import type { WorkflowStateType } from "@/modules/engine/lib/state";
 import { publishNodeStatus } from "@/modules/inngest/realtime/publish-node-status";
 import { runNode } from "@/modules/nodes/executors";
 
+function getItemValue(item: Record<string, unknown>, field: string) {
+  const path = (field || "").replace(/\{\{|\}\}/g, "").trim();
+  if (!path) return "";
+
+  let value: unknown = item;
+  for (const key of path.split(".")) {
+    if (value !== null && typeof value === "object") {
+      value = (value as Record<string, unknown>)[key];
+    } else {
+      return "";
+    }
+  }
+
+  return value == null ? "" : String(value);
+}
+
 function pickBranch(nodeType: string, config: Record<string, string>, item: any) {
-  const key = (config.field || "").replace(/\{\{|\}\}/g, "").trim();
+  const value = getItemValue(item, config.field).trim();
 
   if (nodeType === "if") {
-    const matches = String(item[key] ?? "") === config.value;
-    return matches ? "true" : "false";
+    return value === (config.value ?? "").trim() ? "true" : "false";
   }
 
   if (nodeType === "switch") {
-    const val = String(item[key] ?? "");
     for (const line of (config.cases || "").split("\n")) {
-      const [caseVal, caseBranch] = line.split(":").map((part) => part.trim());
-      if (caseVal && caseVal === val) return caseBranch || "default";
+      const colon = line.indexOf(":");
+      if (colon === -1) continue;
+      const caseVal = line.slice(0, colon).trim();
+      const caseBranch = line.slice(colon + 1).trim();
+      if (caseVal && caseVal === value) return caseBranch || "default";
     }
     return "default";
   }
@@ -29,6 +46,7 @@ export async function executeCanvasNode(
   state: WorkflowStateType,
   node: WorkflowNode,
   executionId: string,
+  userId: string,
 ) {
   const { nodeType, config, label } = node.data;
 
@@ -68,7 +86,7 @@ export async function executeCanvasNode(
       return { branch, item: state.item };
     }
 
-    const item = await runNode(nodeType, config, state.item);
+    const item = await runNode(nodeType, config, state.item, { userId });
 
     await prisma.executionStep.update({
       where: { id: step.id },

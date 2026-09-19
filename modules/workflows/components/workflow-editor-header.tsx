@@ -21,10 +21,13 @@ type WorkflowEditorHeaderProps = {
 export function WorkflowEditorHeader({ workflow }: WorkflowEditorHeaderProps) {
   const [renameOpen, setRenameOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [warning, setWarning] = useState<string | null>(null);
 
   function handleToggleActive(checked: boolean) {
+    setWarning(null);
     startTransition(async () => {
-      await toggleActive(workflow.id, checked);
+      const result = await toggleActive(workflow.id, checked);
+      if (result?.warning) setWarning(result.warning);
     });
   }
 
@@ -51,6 +54,9 @@ export function WorkflowEditorHeader({ workflow }: WorkflowEditorHeaderProps) {
             <p className="text-sm text-muted-foreground">
               Visual canvas editor · Phase 3
             </p>
+            {warning && (
+              <p className="mt-1 text-xs text-destructive">{warning}</p>
+            )}
           </div>
         </div>
 

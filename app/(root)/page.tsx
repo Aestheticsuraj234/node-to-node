@@ -12,7 +12,7 @@ export default async function Home() {
         <div>
           <h2 className="text-2xl font-semibold tracking-tight">Workflows</h2>
           <p className="text-sm text-muted-foreground">
-            Build and manage your automations.
+            Build automations from scratch or start from a template.
           </p>
         </div>
         <NewWorkflowButton className="shrink-0" />

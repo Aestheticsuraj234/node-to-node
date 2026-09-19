@@ -4,6 +4,7 @@ import { useTransition } from "react";
 import { LogOutIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { signOut } from "@/modules/auth/actions";
+import { EnableGoogleCalendarButton } from "@/modules/auth/components/enable-google-calendar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,9 +24,13 @@ type UserButtonProps = {
     email: string;
     image?: string | null;
   };
+  googleCalendar?: {
+    linked: boolean;
+    enabled: boolean;
+  };
 };
 
-export function UserButton({ user }: UserButtonProps) {
+export function UserButton({ user, googleCalendar }: UserButtonProps) {
   const [isPending, startTransition] = useTransition();
 
   const initials = user.name
@@ -53,7 +58,7 @@ export function UserButton({ user }: UserButtonProps) {
           </Button>
         }
       />
-      <DropdownMenuContent align="end" className="w-56">
+      <DropdownMenuContent align="end" className="w-64">
         <DropdownMenuGroup>
           <DropdownMenuLabel>
             <div className="flex flex-col gap-1">
@@ -63,6 +68,13 @@ export function UserButton({ user }: UserButtonProps) {
               </span>
             </div>
           </DropdownMenuLabel>
+        </DropdownMenuGroup>
+        <DropdownMenuSeparator />
+        <DropdownMenuGroup>
+          <div className="px-2 py-1.5">
+            <p className="mb-1.5 text-xs font-medium">Google Calendar</p>
+            <EnableGoogleCalendarButton status={googleCalendar} compact />
+          </div>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>

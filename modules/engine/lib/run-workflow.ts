@@ -14,7 +14,12 @@ export async function runWorkflow(executionId: string) {
     execution.workflow.edges,
   );
 
-  const app = compileWorkflow(nodes, edges, executionId);
+  const app = compileWorkflow(
+    nodes,
+    edges,
+    executionId,
+    execution.workflow.userId,
+  );
 
   try {
     const result = await app.invoke({

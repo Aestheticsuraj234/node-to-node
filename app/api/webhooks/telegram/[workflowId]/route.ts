@@ -1,33 +1,20 @@
-import prisma  from "@/lib/db";
+import prisma from "@/lib/db";
 import { parseWorkflowGraph } from "@/modules/canvas/lib/parse-graph";
 import { startWorkflowExecution } from "@/modules/engine/lib/start-execution";
-
-function parseTelegramUpdate(update: Record<string, unknown>) {
-  const message =
-    (update.message as Record<string, unknown> | undefined) ??
-    (update.edited_message as Record<string, unknown> | undefined) ??
-    (update.channel_post as Record<string, unknown> | undefined);
-
-  if (!message) return { raw: update };
-
-  const chat = message.chat as Record<string, unknown> | undefined;
-  const from = message.from as Record<string, unknown> | undefined;
-  const text = (message.text as string | undefined) ?? "";
-
-  return {
-    message: text,
-    text,
-    chatId: chat?.id != null ? String(chat.id) : "",
-    from: (from?.username as string | undefined) ?? (from?.first_name as string | undefined) ?? "",
-    raw: update,
-  };
-}
+import {
+  parseTelegramUpdate,
+  verifyTelegramSecret,
+} from "@/modules/webhooks/lib/telegram";
 
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ workflowId: string }> },
 ) {
   const { workflowId } = await params;
+
+  if (!verifyTelegramSecret(request)) {
+    return Response.json({ error: "Invalid Telegram secret" }, { status: 401 });
+  }
 
   const workflow = await prisma.workflow.findFirst({
     where: { id: workflowId, active: true },
@@ -43,10 +30,19 @@ export async function POST(
     return Response.json({ error: "Workflow has no Telegram trigger" }, { status: 400 });
   }
 
-  const update = await request.json().catch(() => ({}));
-  const payload = parseTelegramUpdate(update as Record<string, unknown>);
+  const update = (await request.json().catch(() => ({}))) as Record<string, unknown>;
+  const parsed = parseTelegramUpdate(update);
+  if (parsed.ignore) {
+    return Response.json({ ok: true, ignored: true }, { status: 200 });
+  }
 
-  const executionId = await startWorkflowExecution(workflowId, "TELEGRAM", payload);
+  const executionId = await startWorkflowExecution(workflowId, "TELEGRAM", {
+    message: parsed.message,
+    text: parsed.text,
+    chatId: parsed.chatId,
+    from: parsed.from,
+    raw: parsed.raw,
+  });
 
-  return Response.json({ executionId }, { status: 202 });
+  return Response.json({ executionId }, { status: 200 });
 }

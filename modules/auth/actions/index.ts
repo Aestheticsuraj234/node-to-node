@@ -3,6 +3,7 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
+import { getGoogleCalendarStatus } from "@/modules/auth/lib/google-calendar";
 
 export async function getCurrentUser() {
   const session = await auth.api.getSession({
@@ -49,4 +50,9 @@ export async function signOut() {
   });
 
   redirect("/sign-in");
+}
+
+export async function getGoogleCalendarConnection() {
+  const user = await requireAuth();
+  return getGoogleCalendarStatus(user.id);
 }
