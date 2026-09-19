@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import  prisma  from "@/lib/db";
 import { requireAuth } from "@/modules/auth/actions";
+import { inngest } from "@/modules/inngest/client";
+import { workflowTriggered } from "@/modules/inngest/events";
 
 export async function getWorkflows() {
   const user = await requireAuth();
@@ -87,4 +89,33 @@ export async function saveWorkflowGraph(
     where: { id, userId: user.id },
     data: { nodes: nodes as any, edges: edges as any },
   });
+}
+
+
+export async function triggerWorkflow(workflowId: string) {
+  const user = await requireAuth();
+
+  const workflow = await prisma.workflow.findFirst({
+    where: { id: workflowId, userId: user.id },
+  });
+
+  if (!workflow) throw new Error("Workflow not found");
+
+    const execution = await prisma.execution.create({
+      data: {
+        workflowId,
+        trigger: "MANUAL",
+        status: "RUNNING",
+      },
+    });
+
+  await inngest.send(
+    workflowTriggered.create({
+      workflowId,
+      executionId: execution.id,
+      trigger: "MANUAL",
+    }),
+  );
+
+  return execution.id;
 }

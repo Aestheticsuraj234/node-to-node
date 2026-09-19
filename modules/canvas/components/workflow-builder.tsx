@@ -77,7 +77,7 @@ function WorkflowBuilderInner({
       <div className="flex h-full min-h-0 w-full overflow-hidden">
         {/* Canvas — full width until config opens */}
         <div className="relative min-w-0 flex-1">
-          <CanvasToolbar onOpenPicker={() => setPickerOpen(true)} />
+          <CanvasToolbar workflowId={workflowId} onOpenPicker={() => setPickerOpen(true)} />
 
           <SaveIndicator
             status={saveStatus}
