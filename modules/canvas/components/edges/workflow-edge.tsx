@@ -20,6 +20,7 @@ export function WorkflowEdgeComponent(props: EdgeProps) {
     label,
     data,
     selected,
+    style,
   } = props;
 
   const edgeData = data as WorkflowEdgeData | undefined;
@@ -43,8 +44,10 @@ export function WorkflowEdgeComponent(props: EdgeProps) {
         id={id}
         path={path}
         style={{
-          strokeWidth: selected ? 2.5 : 1.5,
-          stroke: selected ? "var(--primary)" : "var(--muted-foreground)",
+          strokeWidth: selected ? 2.5 : Number(style?.strokeWidth ?? 1.5),
+          stroke: selected
+            ? "var(--primary)"
+            : String(style?.stroke ?? "var(--muted-foreground)"),
         }}
       />
       {displayLabel && (

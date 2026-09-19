@@ -7,9 +7,13 @@ import { Button } from "@/components/ui/button";
 
 type RunWorkflowButtonProps = {
     workflowId: string;
+    onRunStarted?: (executionId: string) => void;
   };
   
-  export function RunWorkflowButton({ workflowId }: RunWorkflowButtonProps) {
+  export function RunWorkflowButton({
+    workflowId,
+    onRunStarted,
+  }: RunWorkflowButtonProps) {
     const [pending, startTransition] = useTransition();
     const [message, setMessage] = useState<string | null>(null);
   
@@ -18,6 +22,7 @@ type RunWorkflowButtonProps = {
       startTransition(async () => {
         try {
           const executionId = await triggerWorkflow(workflowId);
+          onRunStarted?.(executionId);
           setMessage(`Run started (${executionId.slice(0, 8)}…)`);
         } catch (err: any) {
           setMessage(err?.message ?? "Run failed");

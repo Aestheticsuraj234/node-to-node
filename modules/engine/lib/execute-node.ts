@@ -1,6 +1,7 @@
 import prisma  from "@/lib/db";
 import type { WorkflowNode } from "@/modules/canvas/lib/types";
 import type { WorkflowStateType } from "@/modules/engine/lib/state";
+import { publishNodeStatus } from "@/modules/inngest/realtime/publish-node-status";
 import { runNode } from "@/modules/nodes/executors";
 
 function pickBranch(nodeType: string, config: Record<string, string>, item: any) {
@@ -42,6 +43,8 @@ export async function executeCanvasNode(
     },
   });
 
+  await publishNodeStatus(executionId, { nodeId: node.id, status: "running" });
+
   try {
     if (nodeType === "if" || nodeType === "switch") {
       const branch = pickBranch(nodeType, config, state.item);
@@ -54,6 +57,12 @@ export async function executeCanvasNode(
           output: output as any,
           finishedAt: new Date(),
         },
+      });
+
+      await publishNodeStatus(executionId, {
+        nodeId: node.id,
+        status: "success",
+        output,
       });
 
       return { branch, item: state.item };
@@ -70,16 +79,24 @@ export async function executeCanvasNode(
       },
     });
 
+    await publishNodeStatus(executionId, {
+      nodeId: node.id,
+      status: "success",
+      output: item,
+    });
+
     return {
       item,
       nodeResults: { [node.id]: item },
     };
   } catch (err: any) {
+    const error = err?.message ?? String(err);
+
     await prisma.executionStep.update({
       where: { id: step.id },
       data: {
         status: "ERROR",
-        error: err?.message ?? String(err),
+        error,
         finishedAt: new Date(),
       },
     });
@@ -87,6 +104,12 @@ export async function executeCanvasNode(
     await prisma.execution.update({
       where: { id: executionId },
       data: { status: "ERROR", finishedAt: new Date() },
+    });
+
+    await publishNodeStatus(executionId, {
+      nodeId: node.id,
+      status: "error",
+      error,
     });
 
     throw err;

@@ -1,12 +1,23 @@
 import type { Edge, Node } from "@xyflow/react";
 
-export type NodeExecutionStatus = "idle" | "running" | "success" | "error";
+export type NodeExecutionStatus =
+  | "idle"
+  | "pending"
+  | "running"
+  | "success"
+  | "error";
+
+export type NodeExecutionOverlay = Record<
+  string,
+  { status: NodeExecutionStatus; errorMessage?: string }
+>;
 
 export type WorkflowNodeData = {
   label: string;
   nodeType: string;
   config: Record<string, string>;
   status?: NodeExecutionStatus;
+  errorMessage?: string;
 };
 
 export type WorkflowNode = Node<WorkflowNodeData>;

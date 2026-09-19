@@ -1,7 +1,7 @@
 import { staticSchema } from "inngest";
 import { channel } from "inngest/realtime";
 
-/** Live node status on canvas — wired up in Phase 5 */
+/** Live node status on canvas */
 export const executionChannel = channel({
   name: (params: { executionId: string }) => `execution:${params.executionId}`,
   topics: {

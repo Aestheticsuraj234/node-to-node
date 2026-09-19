@@ -1,16 +1,19 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   ReactFlowProvider,
   useEdgesState,
   useNodesState,
   useReactFlow,
 } from "@xyflow/react";
-import type { WorkflowEdge } from "@/modules/canvas/lib/types";
+import type { WorkflowEdge, WorkflowNode } from "@/modules/canvas/lib/types";
 import { parseWorkflowGraph } from "@/modules/canvas/lib/parse-graph";
 import { createWorkflowNode } from "@/modules/canvas/lib/create-node";
-import type { WorkflowNode, WorkflowNodeData } from "@/modules/canvas/lib/types";
+import {
+  applyEdgeExecutionOverlay,
+  applyNodeExecutionOverlay,
+} from "@/modules/canvas/lib/execution-overlay";
 import { Canvas } from "@/modules/canvas/components/canvas";
 import { CanvasEmptyState } from "@/modules/canvas/components/canvas-empty-state";
 import { CanvasToolbar } from "@/modules/canvas/components/canvas-toolbar";
@@ -19,6 +22,7 @@ import { NodeConfigPanel } from "@/modules/canvas/components/node-config-panel";
 import { NodePickerSheet } from "@/modules/canvas/components/node-picker-sheet";
 import { SaveIndicator } from "@/modules/canvas/components/save-indicator";
 import { useAutosave } from "@/modules/canvas/hooks/use-autosave";
+import { useExecutionOverlay } from "@/modules/canvas/hooks/use-execution-overlay";
 
 type WorkflowBuilderProps = {
   workflowId: string;
@@ -37,8 +41,17 @@ function WorkflowBuilderInner({
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
   const { screenToFlowPosition } = useReactFlow();
+  const { overlay, runActive, startExecution } = useExecutionOverlay(workflowId);
 
   const saveStatus = useAutosave(workflowId, nodes, edges);
+  const displayNodes = useMemo(
+    () => applyNodeExecutionOverlay(nodes, overlay, runActive),
+    [nodes, overlay, runActive],
+  );
+  const displayEdges = useMemo(
+    () => applyEdgeExecutionOverlay(edges, overlay, runActive),
+    [edges, overlay, runActive],
+  );
 
   const selectedNode = nodes.find((node) => node.id === selectedNodeId) ?? null;
 
@@ -77,7 +90,11 @@ function WorkflowBuilderInner({
       <div className="flex h-full min-h-0 w-full overflow-hidden">
         {/* Canvas — full width until config opens */}
         <div className="relative min-w-0 flex-1">
-          <CanvasToolbar workflowId={workflowId} onOpenPicker={() => setPickerOpen(true)} />
+          <CanvasToolbar
+            workflowId={workflowId}
+            onOpenPicker={() => setPickerOpen(true)}
+            onRunStarted={startExecution}
+          />
 
           <SaveIndicator
             status={saveStatus}
@@ -92,8 +109,8 @@ function WorkflowBuilderInner({
           )}
 
           <Canvas
-            nodes={nodes}
-            edges={edges}
+            nodes={displayNodes}
+            edges={displayEdges}
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
             setNodes={setNodes}
