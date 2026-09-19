@@ -7,11 +7,13 @@ import { Button } from "@/components/ui/button";
 type CanvasEmptyStateProps = {
   onOpenPicker: () => void;
   onAddNode: (nodeType: string) => void;
+  onUseTemplate: (templateId: string) => void;
 };
 
 export function CanvasEmptyState({
   onOpenPicker,
   onAddNode,
+  onUseTemplate,
 }: CanvasEmptyStateProps) {
   return (
     <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center p-6">
@@ -32,6 +34,13 @@ export function CanvasEmptyState({
           </Button>
           <Button
             variant="outline"
+            size="sm"
+            onClick={() => onUseTemplate("manual-path")}
+          >
+            Template: Manual Path
+          </Button>
+          <Button
+            variant="ghost"
             size="sm"
             onClick={() => onAddNode("manual-trigger")}
           >

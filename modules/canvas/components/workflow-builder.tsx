@@ -23,6 +23,7 @@ import { NodePickerSheet } from "@/modules/canvas/components/node-picker-sheet";
 import { SaveIndicator } from "@/modules/canvas/components/save-indicator";
 import { useAutosave } from "@/modules/canvas/hooks/use-autosave";
 import { useExecutionOverlay } from "@/modules/canvas/hooks/use-execution-overlay";
+import { buildWorkflowTemplate } from "@/modules/workflows/lib/templates";
 
 type WorkflowBuilderProps = {
   workflowId: string;
@@ -40,7 +41,7 @@ function WorkflowBuilderInner({
   const [edges, setEdges, onEdgesChange] = useEdgesState<WorkflowEdge>(parsed.edges);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
-  const { screenToFlowPosition } = useReactFlow();
+  const { screenToFlowPosition, fitView } = useReactFlow();
   const { overlay, runActive, startExecution } = useExecutionOverlay(workflowId);
 
   const saveStatus = useAutosave(workflowId, nodes, edges);
@@ -68,6 +69,19 @@ function WorkflowBuilderInner({
       setSelectedNodeId(newNode.id);
     },
     [nodes.length, screenToFlowPosition, selectedNode, setNodes],
+  );
+
+  const applyTemplate = useCallback(
+    (templateId: string) => {
+      const graph = buildWorkflowTemplate(templateId);
+      setNodes(graph.nodes);
+      setEdges(graph.edges);
+      setSelectedNodeId(graph.nodes[0]?.id ?? null);
+      requestAnimationFrame(() => {
+        fitView({ padding: 0.2, duration: 200 });
+      });
+    },
+    [fitView, setEdges, setNodes],
   );
 
   const onUpdateNode = useCallback(
@@ -105,6 +119,7 @@ function WorkflowBuilderInner({
             <CanvasEmptyState
               onOpenPicker={() => setPickerOpen(true)}
               onAddNode={addNode}
+              onUseTemplate={applyTemplate}
             />
           )}
 

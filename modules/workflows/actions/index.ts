@@ -6,6 +6,7 @@ import  prisma  from "@/lib/db";
 import { requireAuth } from "@/modules/auth/actions";
 import { inngest } from "@/modules/inngest/client";
 import { workflowTriggered } from "@/modules/inngest/events";
+import { getWorkflowTemplate } from "@/modules/workflows/lib/templates";
 
 export async function getWorkflows() {
   const user = await requireAuth();
@@ -31,11 +32,18 @@ export async function getWorkflow(id: string) {
   });
 }
 
-export async function createWorkflow(name = "Untitled workflow") {
+export async function createWorkflow(templateId?: string) {
   const user = await requireAuth();
+  const template = templateId ? getWorkflowTemplate(templateId) : undefined;
+  const graph = template?.build();
 
   const workflow = await prisma.workflow.create({
-    data: { name, userId: user.id },
+    data: {
+      name: template?.name ?? "Untitled workflow",
+      userId: user.id,
+      nodes: (graph?.nodes ?? []) as any,
+      edges: (graph?.edges ?? []) as any,
+    },
   });
 
   revalidatePath("/");
