@@ -10,6 +10,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
+import { WorkflowBuilder } from "@/modules/canvas/components/workflow-builder";
 
 export default async function WorkflowEditorPage({
   params,
@@ -24,21 +25,17 @@ export default async function WorkflowEditorPage({
   }
 
   return (
-    <main className="flex flex-1 flex-col gap-6 p-6">
+    <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
+    <header className="shrink-0 border-b px-4 py-2.5">
       <WorkflowEditorHeader workflow={workflow} />
-
-      <Empty className="min-h-[480px] flex-1 border">
-        <EmptyHeader>
-          <EmptyMedia variant="icon">
-            <HugeiconsIcon icon={WorkflowSquare02Icon} strokeWidth={2} />
-          </EmptyMedia>
-          <EmptyTitle>Canvas builder coming soon</EmptyTitle>
-          <EmptyDescription>
-            Phase 3 adds the React Flow editor here — drag nodes, connect
-            edges, and configure each step.
-          </EmptyDescription>
-        </EmptyHeader>
-      </Empty>
-    </main>
+    </header>
+    <div className="min-h-0 flex-1 overflow-hidden">
+      <WorkflowBuilder
+        workflowId={workflow.id}
+        initialNodes={workflow.nodes}
+        initialEdges={workflow.edges}
+      />
+    </div>
+  </div>
   );
 }

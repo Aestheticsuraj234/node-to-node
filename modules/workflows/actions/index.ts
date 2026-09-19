@@ -74,3 +74,17 @@ export async function toggleActive(id: string, active: boolean) {
   revalidatePath("/");
   revalidatePath(`/workflows/${id}`);
 }
+
+
+export async function saveWorkflowGraph(
+  id: string,
+  nodes: unknown,
+  edges: unknown,
+) {
+  const user = await requireAuth();
+
+  await prisma.workflow.updateMany({
+    where: { id, userId: user.id },
+    data: { nodes: nodes as any, edges: edges as any },
+  });
+}
